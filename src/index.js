@@ -14,7 +14,7 @@ module.exports = function withSideEffect(
     throw new Error('Expected handleStateChangeOnClient to be a function.');
   }
   if (typeof mapStateOnServer !== 'undefined' && typeof mapStateOnServer !== 'function') {
-   throw new Error('Expected mapStateOnServer to either be undefined or a function.');
+    throw new Error('Expected mapStateOnServer to either be undefined or a function.');
   }
 
   function getDisplayName(WrappedComponent) {

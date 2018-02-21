@@ -39,7 +39,7 @@ describe('react-side-effect', () => {
     const withNoopSideEffect = withSideEffect(noop, noop);
 
     it('should wrap the displayName of wrapped createClass component', () => {
-      const DummyComponent = createClass({displayName: 'Dummy', render: noop});
+      const DummyComponent = createClass({ displayName: 'Dummy', render: noop });
       const SideEffect = withNoopSideEffect(DummyComponent);
 
       expect(SideEffect.displayName).to.equal('SideEffect(Dummy)');
@@ -48,7 +48,7 @@ describe('react-side-effect', () => {
     it('should wrap the displayName of wrapped ES2015 class component', () => {
       class DummyComponent extends React.Component {
         static displayName = 'Dummy'
-        render() {}
+        render() { }
       }
       const SideEffect = withNoopSideEffect(DummyComponent);
 
@@ -56,7 +56,7 @@ describe('react-side-effect', () => {
     });
 
     it('should use the constructor name of the wrapped functional component', () => {
-      function DummyComponent() {}
+      function DummyComponent() { }
 
       const SideEffect = withNoopSideEffect(DummyComponent);
 
@@ -64,7 +64,7 @@ describe('react-side-effect', () => {
     });
 
     it('should fallback to "Component"', () => {
-      const DummyComponent = createClass({displayName: null, render: noop});
+      const DummyComponent = createClass({ displayName: null, render: noop });
       const SideEffect = withNoopSideEffect(DummyComponent);
 
       expect(SideEffect.displayName).to.equal('SideEffect(Component)');
@@ -73,7 +73,7 @@ describe('react-side-effect', () => {
 
   describe('SideEffect component', () => {
     class DummyComponent extends React.Component {
-      render () {
+      render() {
         return <div>hello {this.props.foo}</div>
       }
     };
@@ -96,13 +96,13 @@ describe('react-side-effect', () => {
       });
 
       it('should return the current state', () => {
-        shallow(<SideEffect foo="bar"/>);
+        shallow(<SideEffect foo="bar" />);
         const state = SideEffect.rewind();
-        expect(state).to.deep.equal([{foo: 'bar'}]);
+        expect(state).to.deep.equal([{ foo: 'bar' }]);
       });
 
       it('should reset the state', () => {
-        shallow(<SideEffect foo="bar"/>);
+        shallow(<SideEffect foo="bar" />);
         SideEffect.rewind();
         const state = SideEffect.rewind();
         expect(state).to.equal(undefined);
@@ -111,17 +111,17 @@ describe('react-side-effect', () => {
 
     describe('peek', () => {
       it('should return the current state', () => {
-        shallow(<SideEffect foo="bar"/>);
-        expect(SideEffect.peek()).to.deep.equal([{foo: 'bar'}]);
+        shallow(<SideEffect foo="bar" />);
+        expect(SideEffect.peek()).to.deep.equal([{ foo: 'bar' }]);
       });
 
       it('should NOT reset the state', () => {
-        shallow(<SideEffect foo="bar"/>);
+        shallow(<SideEffect foo="bar" />);
 
         SideEffect.peek();
         const state = SideEffect.peek();
 
-        expect(state).to.deep.equal([{foo: 'bar'}]);
+        expect(state).to.deep.equal([{ foo: 'bar' }]);
       });
     });
 
@@ -135,49 +135,49 @@ describe('react-side-effect', () => {
 
         SideEffect.canUseDOM = true;
 
-        shallow(<SideEffect foo="bar"/>);
+        shallow(<SideEffect foo="bar" />);
 
-        expect(sideEffectCollectedData).to.deep.equal([{foo: 'bar'}]);
+        expect(sideEffectCollectedData).to.deep.equal([{ foo: 'bar' }]);
       });
     });
 
     describe('mapStateOnServer', () => {
       it('should apply a custom mapStateOnServer function', () => {
-        const mapStateOnServer = ([ prop ]) => prop
+        const mapStateOnServer = ([prop]) => prop
 
         SideEffect = withSideEffect(identity, noop, mapStateOnServer)(DummyComponent);
 
         SideEffect.canUseDOM = false;
 
-        shallow(<SideEffect foo="bar"/>);
+        shallow(<SideEffect foo="bar" />);
 
         let state = SideEffect.rewind();
 
         expect(state).not.to.be.an('Array');
-        expect(state).to.deep.equal({foo: 'bar'});
+        expect(state).to.deep.equal({ foo: 'bar' });
 
         SideEffect.canUseDOM = true;
 
-        shallow(<SideEffect foo="bar"/>);
+        shallow(<SideEffect foo="bar" />);
 
         state = SideEffect.peek();
 
         expect(state).to.an('Array');
-        expect(state).to.deep.equal([{foo: 'bar'}]);
+        expect(state).to.deep.equal([{ foo: 'bar' }]);
       });
     });
 
     it('should collect props from all instances', () => {
-      shallow(<SideEffect foo="bar"/>);
-      shallow(<SideEffect something="different"/>);
+      shallow(<SideEffect foo="bar" />);
+      shallow(<SideEffect something="different" />);
 
       const state = SideEffect.peek();
 
-      expect(state).to.deep.equal([{foo: 'bar'}, {something: 'different'}]);
+      expect(state).to.deep.equal([{ foo: 'bar' }, { something: 'different' }]);
     });
 
     it('should render the wrapped component', () => {
-      const markup = renderToStaticMarkup(<SideEffect foo="bar"/>);
+      const markup = renderToStaticMarkup(<SideEffect foo="bar" />);
 
       expect(markup).to.equal('<div>hello bar</div>');
     });
@@ -293,7 +293,7 @@ describe('react-side-effect', () => {
             state = {};
             componentDidCatch(error) {
               error.suppressReactErrorLogging = true;
-              this.setState({error})
+              this.setState({ error })
             }
             render() {
               if (this.state.error) {
@@ -316,6 +316,53 @@ describe('react-side-effect', () => {
           );
 
           expect(documentTitle).to.equal('middle');
+        });
+
+        it('should mount in correct order', () => {
+          class DummyComponent extends React.Component {
+            constructor(props) {
+              super(props);
+
+              this.state = {
+                loaded: false
+              };
+            }
+
+            componentWillMount() {
+              this._mounted = true;
+
+              Promise.resolve().then(() => {
+                if (!this._mounted) {
+                  return;
+                }
+
+                this.setState({
+                  loaded: true
+                });
+              });
+            }
+
+            componentWillUnmount() {
+              this._mounted = false;
+            }
+
+            render() {
+              if (this.state.loaded) {
+                return <TestComponent title="inner" />;
+              } else {
+                return null;
+              }
+            }
+          }
+
+          render(
+            <TestComponent title="outer">
+              <DummyComponent />
+            </TestComponent>,
+            mountNode,
+          );
+
+          expect(documentTitle).to.equal('inner');
         });
       });
     });
